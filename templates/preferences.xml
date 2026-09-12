@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/xml/preferences.xml
+
+    ATAK surfaces a plugin's documentation through its Tool Preferences entry.
+    Without one, the manual ships inside the APK with no way for anyone to open
+    it — and because the PDF genuinely is in there, nothing about the build looks
+    wrong. If the plugin has no settings, this screen exists only so the manual
+    has somewhere to be reached from, and that is reason enough.
+-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.atakmap.android.gui.PanPreference
+        android:key="manual"
+        android:title="@string/manual_title"
+        android:summary="@string/manual_summary" />
+
+</PreferenceScreen>

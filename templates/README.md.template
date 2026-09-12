@@ -1,0 +1,73 @@
+ATAK Plugin — <Display Name>
+
+**Download <Display Name> <ver>** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
+
+- **ATAK-CIV 5.6:** https://github.com/<owner>/<repo>/releases/download/v<ver>/ATAK-Plugin-<Name>-<ver>--5.6.0-civ-release.apk
+- **ATAK-CIV 5.7:** https://github.com/<owner>/<repo>/releases/download/v<ver>/ATAK-Plugin-<Name>-<ver>--5.7.0-civ-release.apk
+- **ATAK-CIV 5.8:** https://github.com/<owner>/<repo>/releases/download/v<ver>/ATAK-Plugin-<Name>-<ver>--5.8.0-civ-release.apk
+
+All releases: https://github.com/<owner>/<repo>/releases
+
+**User guide with screenshots: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)**
+(https://github.com/<owner>/<repo>/blob/main/docs/USER_GUIDE.md)
+
+_________________________________________________________________
+PURPOSE AND CAPABILITIES
+
+What the plugin does, for whom, and what ATAK cannot already do without it.
+Then a short capability list — what an operator can actually do with it.
+
+_________________________________________________________________
+STATUS
+
+Version <ver>. Verified on ATAK-CIV <x.y.z>.
+
+Say what was run on hardware, on which device and which ATAK build, and what
+the result was. "Prepared for tak.gov third-party submission." goes here when
+that is true.
+
+_________________________________________________________________
+POINT OF CONTACTS
+
+<Name>, <organization>
+https://github.com/<owner>/<repo>/issues
+
+_________________________________________________________________
+PORTS REQUIRED
+
+(This is important for ATO, networking, and other security concerns)
+
+  Every outbound port and protocol the plugin uses, when it uses them, and what
+  triggers the traffic. Say explicitly if there are no inbound ports, no
+  listening sockets, and no traffic to or from the TAK server. Say whether it
+  works with the device in airplane mode.
+
+_________________________________________________________________
+EQUIPMENT REQUIRED
+
+  Android device supported by ATAK-CIV <versions>. Storage, if the plugin
+  downloads anything.
+
+_________________________________________________________________
+EQUIPMENT SUPPORTED
+
+  Any Android device supported by ATAK. No additional or external hardware,
+  no sensors, no peripherals. (Or: name the hardware it talks to.)
+
+_________________________________________________________________
+COMPILATION
+
+  Standard ATAK plugin build. Set sdk.path in local.properties to an unpacked
+  ATAK CIV SDK, then:
+
+      ./gradlew assembleCivDebug
+      ./gradlew assembleCivRelease
+
+  ext.ATAK_VERSION in app/build.gradle selects the ATAK release to target.
+
+_________________________________________________________________
+DEVELOPER NOTES
+
+  The things the next person would otherwise have to rediscover: why an
+  approach was chosen, which ATAK API does the work, what is measured rather
+  than assumed, and where the data comes from.

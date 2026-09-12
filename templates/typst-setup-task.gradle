@@ -1,0 +1,87 @@
+// Replace the stock setupTypst task in gradle/typst.gradle with this.
+//
+// Why: the manual is compiled at tak.gov by downloading a ~30 MB typst binary
+// from GitHub, once per ATAK target. The stock task runs `curl -L` without -f,
+// so an HTTP error body is written into the tarball and the build dies at `tar`
+// saying "Extraction failed" — naming neither the network nor the URL. tak.gov
+// reports no failure reason of its own, so the whole thing reads as "this plugin
+// is not compatible with that ATAK version", and the three zips for a release
+// differ in exactly one character (ext.ATAK_VERSION). Diff them before believing
+// a per-version incompatibility; when the source is identical, the cause is not
+// what you submitted. Resubmitting the failed targets is the correct response.
+//
+// It also prefers a typst already on PATH, which removes the network from the
+// middle of the build entirely when you build locally.
+
+def typstOnPath = {
+    (System.getenv("PATH") ?: "").split(File.pathSeparator)
+            .collect { new File(it, "typst") }
+            .find { it.isFile() && it.canExecute() }
+}
+
+task setupTypst {
+    group = "typst"
+    description = "Downloads the pinned Typst binary, unless one is on PATH."
+
+    // Pin the version tak.gov builds with, and verify the manual against that
+    // version rather than whatever is installed locally.
+    def typstUrl = "https://github.com/typst/typst/releases/download/v0.13.1/typst-x86_64-unknown-linux-musl.tar.xz"
+    def downloadDir = file("${buildDir}/typst")
+    def tarFile = file("${downloadDir}/typst.tar.xz")
+    def extractDir = file("${downloadDir}/extracted")
+    def binary = file("${extractDir}/typst-x86_64-unknown-linux-musl/typst")
+
+    inputs.property("typstUrl", typstUrl)
+    outputs.dir(extractDir)
+
+    doLast {
+        def onPath = typstOnPath()
+        if (onPath != null) {
+            println "typst already on PATH (${onPath.absolutePath}), not downloading"
+            extractDir.mkdirs()
+            return
+        }
+        if (binary.isFile()) {
+            return  // already downloaded and extracted
+        }
+
+        downloadDir.mkdirs()
+        extractDir.mkdirs()
+
+        // -f so an HTTP error is an error. --retry because this is a shared
+        // builder pulling 30 MB from GitHub once per ATAK target, and a
+        // transient failure there is not a reason to fail a submission.
+        def cmd = ["curl", "-fsSL", "--retry", "5", "--retry-delay", "2",
+                   "--retry-all-errors", "--connect-timeout", "30",
+                   typstUrl, "-o", tarFile.absolutePath]
+        println "Executing: ${cmd.join(' ')}"
+        def dl = cmd.execute()
+        // Drain the streams. The stock task called waitFor() without reading
+        // them, so curl could fill the pipe buffer and block forever.
+        dl.waitForProcessOutput(System.out, System.err)
+        if (dl.exitValue() != 0) {
+            throw new GradleException("Could not download typst from ${typstUrl}"
+                    + " (curl exit ${dl.exitValue()}). The user manual cannot be"
+                    + " built without it.")
+        }
+        if (!tarFile.isFile() || tarFile.length() < 1024 * 1024) {
+            throw new GradleException("The typst download is too small to be the"
+                    + " release tarball (${tarFile.length()} bytes). The server"
+                    + " answered with something other than the archive.")
+        }
+
+        def ex = ["tar", "-xf", tarFile.absolutePath, "-C",
+                  extractDir.absolutePath].execute()
+        ex.waitForProcessOutput(System.out, System.err)
+        if (ex.exitValue() != 0) {
+            throw new GradleException("Could not extract ${tarFile}"
+                    + " (tar exit ${ex.exitValue()}).")
+        }
+        if (!binary.isFile()) {
+            throw new GradleException("typst extracted but ${binary} is missing;"
+                    + " the archive layout is not what was expected.")
+        }
+        binary.setExecutable(true)
+        tarFile.delete()
+    }
+}

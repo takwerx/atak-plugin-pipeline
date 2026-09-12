@@ -1,0 +1,129 @@
+package com.atakmap.android.<pkg>.plugin;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.os.Bundle;
+import android.preference.Preference;
+
+import com.atakmap.android.preference.PluginPreferenceFragment;
+import com.atakmap.android.util.PdfHelper;
+import com.atakmap.coremap.filesystem.FileSystemUtils;
+
+import java.io.File;
+
+/**
+ * The plugin's entry under ATAK's Tool Preferences, and the only way an operator
+ * can reach the user manual.
+ *
+ * <p>Building the PDF is half the job: gradle/typst.gradle compiles
+ * docs/user_manual/ into assets/usermanual.pdf, but an asset is not reachable by
+ * anyone. Three pieces are required, and all three are easy to have two of:
+ * this fragment, res/xml/preferences.xml with a PanPreference keyed "manual",
+ * and ToolsPreferenceFragment.register(...) on plugin start.
+ *
+ * <p>Check it on a device by opening Settings -> Tool Preferences. Unzipping the
+ * APK proves nothing: the PDF is in there either way.
+ */
+public class <Name>PreferenceFragment extends PluginPreferenceFragment {
+
+    private static final String USER_GUIDE = "usermanual.pdf";
+
+    /** Where the PDF is extracted before a viewer is handed it. This name is what
+     *  the operator sees in a file picker, so name it for what it is. */
+    private static final String USER_GUIDE_PATH = FileSystemUtils.getRoot()
+            + File.separator + "tools" + File.separator + "<pkg>"
+            + File.separator + "<Display Name> User Guide.pdf";
+
+    private static Context pluginContext;
+
+    /**
+     * A number that changes with every release, for PdfHelper's extraction cache.
+     *
+     * <p>The five-argument extractAndShow reads the APK's versionCode and
+     * re-extracts the PDF only when it differs from the one it stored. That is
+     * sound where the version code moves — and if you derive versionCode from
+     * PLUGIN_VERSION (which you must, for MDM updates) it does. Deriving it from
+     * versionName as well costs nothing and also refreshes the manual when the
+     * same plugin version is rebuilt for a different ATAK target.
+     *
+     * <p>If you ever ship a build whose versionCode is stuck at 1 — the SDK's
+     * git-derived default, in a tak.gov build from a zip with no .git — the
+     * stored value never differs, the PDF is never re-extracted, and the first
+     * manual a user opens is the one they keep forever. The plugin manager says
+     * 0.8 while the manual says 0.5, and nothing on the device can fix it.
+     */
+    private static long manualVersion() {
+        try {
+            final String name = pluginContext.getString(R.string.versionName);
+            return name.hashCode() & 0xFFFFFFFFL;
+        } catch (RuntimeException noResource) {
+            // Never let the manual fail to open over its own cache key.
+            return System.currentTimeMillis();
+        }
+    }
+
+    public <Name>PreferenceFragment() {
+        super(pluginContext, R.xml.preferences);
+    }
+
+    @SuppressLint("ValidFragment")
+    public <Name>PreferenceFragment(Context context) {
+        super(context, R.xml.preferences);
+        pluginContext = context;
+    }
+
+    @Override
+    public String getSubTitle() {
+        return getSubTitle("Tool Preferences", "<Display Name>");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        final Preference manual = findPreference("manual");
+        if (manual == null)
+            return;
+        // An anonymous class, not a lambda: lambdas break under release proguard.
+        manual.setOnPreferenceClickListener(
+                new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        PdfHelper.extractAndShow(pluginContext, getActivity(),
+                                USER_GUIDE, manualVersion(), USER_GUIDE_PATH,
+                                true);
+                        return true;
+                    }
+                });
+    }
+}
+
+/*
+ * And in the plugin's lifecycle class (onStart / onStop), guarded so that a
+ * build which does not expose ToolsPreferenceFragment costs the manual, not the
+ * whole plugin:
+ *
+ *   private void registerPreferences() {
+ *       try {
+ *           com.atakmap.app.preferences.ToolsPreferenceFragment.register(
+ *                   new com.atakmap.app.preferences.ToolsPreferenceFragment.ToolPreference(
+ *                           pluginContext.getString(R.string.app_name),
+ *                           pluginContext.getString(R.string.prefs_summary),
+ *                           PREFS_KEY,
+ *                           // ic_toolbar, not ic_launcher: this row sits on ATAK's
+ *                           // dark UI and wants the bare white glyph.
+ *                           pluginContext.getResources().getDrawable(R.drawable.ic_toolbar),
+ *                           new <Name>PreferenceFragment(pluginContext)));
+ *       } catch (LinkageError | RuntimeException notThisBuild) {
+ *           Log.w(TAG, "could not register preferences: " + notThisBuild);
+ *       }
+ *   }
+ *
+ *   private void unregisterPreferences() {
+ *       try {
+ *           com.atakmap.app.preferences.ToolsPreferenceFragment.unregister(PREFS_KEY);
+ *       } catch (LinkageError | RuntimeException notThisBuild) {
+ *           Log.w(TAG, "could not unregister preferences: " + notThisBuild);
+ *       }
+ *   }
+ */

@@ -1,0 +1,28 @@
+<!--
+    Add to res/values/styles.xml, and use style="@style/PluginButton" on EVERY
+    button in the plugin.
+
+    The SDK template already copies ATAK's own button drawables out of the SDK:
+    btn_gray is a selector over new_dark_button_bg / _selected / _disabled —
+    black-to-#383838 gradient, #585858 border, green border when pressed, flat
+    grey when disabled. Do not invent a button background; a plugin that looks
+    like ATAK is a plugin an operator can already use.
+
+    ATAK's own darkButton sets vertical padding only, which lets a short label
+    render wider than its own background. This adds horizontal padding and a
+    44dp minimum height — a touch target for a gloved hand on a vehicle mount,
+    not a cosmetic choice.
+
+    Put no textSize on the widget itself or it fights the style.
+-->
+<style name="PluginButton" parent="@style/darkButton">
+    <item name="android:paddingLeft">12dp</item>
+    <item name="android:paddingRight">12dp</item>
+    <item name="android:paddingTop">6dp</item>
+    <item name="android:paddingBottom">8dp</item>
+    <item name="android:minHeight">44dp</item>
+    <item name="android:minWidth">0dp</item>
+    <item name="android:textSize">15sp</item>
+    <item name="android:singleLine">true</item>
+    <item name="android:ellipsize">end</item>
+</style>
