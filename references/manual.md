@@ -26,7 +26,7 @@ Three pieces, all required (`samples/dsmmanager` is the SDK's reference, and
 APK proves nothing: the PDF is in there either way.
 
 `PdfHelper` re-extracts the PDF when the version it recorded changes, so with a
-`versionCode` derived from `PLUGIN_VERSION` (see [publishing.md](publishing.md))
+`versionCode` derived from `PLUGIN_VERSION` and the ATAK target (see [publishing.md](publishing.md))
 the manual updates by itself. With the SDK's git-derived code — 1 on every signed
 build — it never does: the first manual a user opens is the one they keep, the
 plugin manager says 0.8 while the manual says 0.5, and nothing on the device can

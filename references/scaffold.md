@@ -26,7 +26,7 @@ It copies `samples/plugintemplate` out of the SDK and then does the things that
 are easy to forget and expensive to discover:
 
 - renames the package, the class and the descriptor, sets `rootProject.name`
-- **derives `versionCode` from `PLUGIN_VERSION`** instead of git — see
+- **derives `versionCode` from `PLUGIN_VERSION` and `ATAK_VERSION`** instead of git — see
   [publishing.md](publishing.md); this one is not optional if anyone will ever
   push an update through an MDM
 - **deletes the template's placeholder user manual.** The template ships a manual

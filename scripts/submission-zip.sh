@@ -252,7 +252,9 @@ PROPS
         # build has no .git either. The SDK's getVersionCode() returns 1 here, and
         # a versionCode-1 release is not an update to any MDM.
         AAPT="$(aapt_bin)"
-        EXPECT_CODE="$(version_code "$PLUGIN_VERSION")"
+        # One code per ATAK target: an MDM handed two targets of one release
+        # under one code and two hashes reports an incompatible build.
+        EXPECT_CODE="$(target_version_code "$PLUGIN_VERSION" "$ATAK_VERSION")"
         GOT_CODE=""
         if [ -n "$AAPT" ] && [ -n "$BUILT_APK" ]; then
             GOT_CODE="$("$AAPT" dump badging "$BUILT_APK" 2>/dev/null \
@@ -262,9 +264,9 @@ PROPS
             echo "  FAIL  could not read versionCode from the built APK (aapt: ${AAPT:-none})"
             FAIL=1
         elif [ "$GOT_CODE" = "$EXPECT_CODE" ] && [ "$GOT_CODE" -gt 1 ]; then
-            echo "  PASS  versionCode=$GOT_CODE from PLUGIN_VERSION $PLUGIN_VERSION (no .git needed)"
+            echo "  PASS  versionCode=$GOT_CODE from PLUGIN_VERSION $PLUGIN_VERSION on ATAK $ATAK_VERSION (no .git needed)"
         else
-            echo "  FAIL  versionCode=$GOT_CODE, expected $EXPECT_CODE from PLUGIN_VERSION $PLUGIN_VERSION."
+            echo "  FAIL  versionCode=$GOT_CODE, expected $EXPECT_CODE from PLUGIN_VERSION $PLUGIN_VERSION on ATAK $ATAK_VERSION."
             echo "        A signed release with versionCode 1 cannot be pushed as an update by"
             echo "        any MDM. app/build.gradle must set versionCode = PLUGIN_VERSION_CODE,"
             echo "        not getVersionCode()."

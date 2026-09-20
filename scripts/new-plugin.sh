@@ -85,25 +85,40 @@ if [ -f "$DEST/app/src/main/java/com/atakmap/android/$PKG/plugin/PluginTemplate.
        "$DEST/app/src/main/java/com/atakmap/android/$PKG/plugin/$CLASS.java"
 fi
 
-echo "==> versionCode from PLUGIN_VERSION (the SDK's getVersionCode() is 1 in a tak.gov build)"
+echo "==> versionCode from PLUGIN_VERSION and ATAK_VERSION (the SDK's getVersionCode() is 1 in a tak.gov build)"
 # tak.gov builds from a zip with no .git, so the template's git-derived
 # versionCode falls back to 1 on every signed release — and an MDM decides "is
 # this an update" from that integer alone. Two releases both carrying 1 cannot
-# be pushed over each other. Derive it from PLUGIN_VERSION instead; the
-# submission gate fails the zip when the built APK disagrees.
+# be pushed over each other. Derive it from PLUGIN_VERSION and the ATAK target
+# instead, one code per target (an MDM handed two targets of one release under
+# one code reports an incompatible build); the submission gate fails the zip
+# when the built APK disagrees. The block goes after ext.ATAK_VERSION, which it
+# reads.
 cat > "$DEST/.version-code.block" <<'BLOCK'
     // Android's integer version. The package manager and every MDM decide "is
     // this an update" from this number alone; versionName is display only. The
     // SDK's getVersionCode() reads the git commit, and tak.gov builds from a
-    // zip with no .git — so every signed release would carry versionCode 1 and
+    // zip with no .git, so every signed release would carry versionCode 1 and
     // no MDM could push one release over the last. Derived from PLUGIN_VERSION
-    // instead, identical on every machine: 1.3 -> 10300, 1.3.1 -> 10301.
+    // instead, identical on every machine, with the ATAK target folded in: a
+    // release is one APK per ATAK version, all the same package, and an MDM
+    // handed two of them under one code with different hashes reports an
+    // incompatible build. 1.3 on ATAK 5.8.0 -> 10300 * 10000 + 5080 =
+    // 103005080: every target of a release gets its own code, and every
+    // release is above the last on every target. The submission gate fails the
+    // zip when the built APK disagrees.
     ext.PLUGIN_VERSION_CODE = { ->
         def p = (PLUGIN_VERSION.tokenize('.') + ['0', '0']).collect { it as int }
-        return p[0] * 10000 + p[1] * 100 + p[2]
+        def a = (ATAK_VERSION.tokenize('.').takeWhile { it.isInteger() } + ['0', '0']).collect { it as int }
+        if (p[1] > 99 || p[2] > 99 || a[0] > 9 || a[1] > 99 || a[2] > 9)
+            throw new GradleException("PLUGIN_VERSION $PLUGIN_VERSION on ATAK $ATAK_VERSION does not fit the versionCode scheme (see references/publishing.md)")
+        def code = (p[0] * 10000 + p[1] * 100 + p[2]) * 10000 + a[0] * 1000 + a[1] * 10 + a[2]
+        if (code > 2100000000)
+            throw new GradleException("versionCode $code is past Android's limit: PLUGIN_VERSION major stays at or below 20")
+        return code
     }()
 BLOCK
-sed "${SED_I[@]}" "/^[[:space:]]*ext\.PLUGIN_VERSION[[:space:]]*=/r $DEST/.version-code.block" "$DEST/app/build.gradle"
+sed "${SED_I[@]}" "/^[[:space:]]*ext\.ATAK_VERSION[[:space:]]*=/r $DEST/.version-code.block" "$DEST/app/build.gradle"
 rm -f "$DEST/.version-code.block"
 sed "${SED_I[@]}" 's|^\([[:space:]]*\)defaultConfig.versionCode = getVersionCode()$|\1// Not getVersionCode(): that is 1 at tak.gov. See PLUGIN_VERSION_CODE above.\n\1defaultConfig.versionCode = PLUGIN_VERSION_CODE|' "$DEST/app/build.gradle"
 grep -q 'defaultConfig.versionCode = PLUGIN_VERSION_CODE' "$DEST/app/build.gradle" || {

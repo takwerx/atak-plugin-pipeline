@@ -102,6 +102,25 @@ version_code() {
         printf "%d", $1*10000 + $2*100 + $3 }'
 }
 
+# atak_code <5.8.0> -> 5080: the ATAK target's share of a versionCode. ATAK
+# major <= 9, minor <= 99, patch <= 9, or the digits run into each other.
+atak_code() {
+    printf '%s' "$1" | awk -F. '{
+        if ($1 !~ /^[0-9]+$/ || $1 > 9 || ($2 != "" && ($2 !~ /^[0-9]+$/ || $2 > 99)) ||
+            ($3 != "" && ($3 !~ /^[0-9]+$/ || $3 > 9))) exit 1
+        printf "%d", $1*1000 + $2*10 + $3 }'
+}
+
+# target_version_code <1.3> <5.8.0> -> 103005080: what the APK built for that
+# target carries. One code per target: an MDM handed two targets of one release
+# under one code and two hashes reports an incompatible build.
+target_version_code() {
+    local p a
+    p="$(version_code "$1")" || return 1
+    a="$(atak_code "$2")" || return 1
+    printf '%d' "$((p * 10000 + a))"
+}
+
 # sdk_for <5.8.0> -> the newest unpacked SDK matching that ATAK version
 sdk_for() {
     ls -d "$ATAK_SDK_ROOT"/ATAK-CIV-"$1"* 2>/dev/null | sort -V | tail -1

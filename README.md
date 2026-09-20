@@ -122,9 +122,11 @@ search if your plugins live somewhere else entirely.
 - **The denylist** is yours to fill in. The scrub is only as good as it.
 - **The README standard** in `templates/README.md.template` is what tak.gov's
   reviewer reads and what your users land on. Keep the heading order.
-- **The version scheme** (`MAJOR*10000 + MINOR*100 + PATCH`) is arbitrary but must
-  be consistent forever — it only has to rise, and the gate checks it against
-  every signed release you have kept.
+- **The version scheme** (`(MAJOR*10000 + MINOR*100 + PATCH) * 10000 +
+  ATAK_MAJOR*1000 + ATAK_MINOR*10 + ATAK_PATCH`) is arbitrary but must be
+  consistent forever — it only has to rise on every target and differ between
+  the targets of one release, and the gate checks it against every signed
+  release you have kept.
 - **The distribution channel** (step 7 in `SKILL.md`) is the one piece nobody can
   write for you. Whatever your users install from — a market catalog, an MDM, a
   shared folder — updating it is part of the release, with a check.

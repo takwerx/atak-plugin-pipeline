@@ -28,7 +28,7 @@ one of them is a rejected or silently-broken submission:
   package.
 - `assembleCivRelease` must be a defined target, and the
   `com.atakmap.app.component` discovery activity must be in the manifest.
-- The built APK's `versionCode` must be the one derived from `PLUGIN_VERSION` —
+- The built APK's `versionCode` must be the one derived from `PLUGIN_VERSION` and the ATAK target —
   see [publishing.md](publishing.md).
 
 The last check extracts the zip to a clean directory and builds it with
