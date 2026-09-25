@@ -1,0 +1,62 @@
+name: checks
+
+# A workflow is code. This one has no secrets and no write permission, so a
+# pull request cannot use it to change anything, only to be checked.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SKILL.md has its frontmatter and stays short
+        run: |
+          head -1 SKILL.md | grep -qx -- '---' || { echo "SKILL.md must open with --- frontmatter"; exit 1; }
+          sed -n '2,/^---$/p' SKILL.md | grep -q '^name: atak-plugin-pipeline$' || { echo "SKILL.md frontmatter needs name: atak-plugin-pipeline"; exit 1; }
+          sed -n '2,/^---$/p' SKILL.md | grep -q '^description: .\{40,\}' || { echo "SKILL.md frontmatter needs a description"; exit 1; }
+          n=$(wc -l < SKILL.md)
+          # Progressive disclosure: SKILL.md is read on every trigger, detail
+          # belongs in references/ and is read when needed.
+          [ "$n" -le 175 ] || { echo "SKILL.md is $n lines; move detail into references/ (limit 175)"; exit 1; }
+
+      - name: Every relative link resolves
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          bad = []
+          for md in pathlib.Path('.').rglob('*.md'):
+              if '.git' in md.parts:
+                  continue
+              text = md.read_text(encoding='utf-8')
+              text = re.sub(r'```.*?```', '', text, flags=re.S)   # code blocks hold examples, not links
+              text = re.sub(r'`[^`\n]*`', '', text)               # and so does inline code
+              for target in re.findall(r'\]\(([^)\s]+)\)', text):
+                  if re.match(r'[a-z]+:', target) or target.startswith('#'):
+                      continue
+                  path = (md.parent / target.split('#')[0]).resolve()
+                  if not path.exists():
+                      bad.append(f'{md}: {target}')
+          if bad:
+              print('broken relative links:', *bad, sep='\n  ')
+              sys.exit(1)
+          PY
+
+      - name: No binaries and no TAK SDK material
+        run: |
+          # The SDK's license forbids redistributing it. This repository is
+          # guidance, scripts and text templates, nothing else.
+          found=$(git ls-files | grep -E -i '\.(jar|aar|apk|aab|dex|so|class|keystore|jks|p12|pfx|zip|tar|gz|xz)$|(^|/)(main\.jar|atak\.apk|android_keystore|atak-gradle-takdev\.jar|atak-javadoc\.jar|local\.properties)$' || true)
+          [ -z "$found" ] || { echo "not allowed in this repository:"; echo "$found"; exit 1; }
+          if git grep -I -l -E -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' -- . ':!.github/workflows/checks.yml'; then
+            echo "a private key block is committed"; exit 1
+          fi
+
+      - name: shellcheck
+        run: shellcheck -S warning scripts/*.sh hooks/*.sh

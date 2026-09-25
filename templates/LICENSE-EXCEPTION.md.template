@@ -1,0 +1,81 @@
+# Licensing notes for __DISPLAY__
+
+__DISPLAY__ is licensed under the **[__LICENSE_NAME__](LICENSE)**.
+
+Two things about an ATAK plugin do not follow from the license text alone, and
+both are stated here so nobody has to guess: the additional permission that lets
+this plugin be combined with ATAK, and which files in this repository
+__HOLDER__ did not write.
+
+<!-- Section 1 is for a copyleft license (GPL, AGPL). Delete it for MIT or
+     Apache-2.0, and keep section 2 either way. -->
+
+---
+
+## 1. Additional permission for the TAK Software (section 7)
+
+An ATAK plugin is loaded into ATAK's own process and calls ATAK's API directly.
+That is what a plugin is, and the license was not written with it in mind, so
+the permission below is granted explicitly.
+
+> **Additional permission under __LICENSE_SHORT__ section 7**
+>
+> As a special exception, the copyright holders of __DISPLAY__ give you permission to
+> combine, link with, and distribute __DISPLAY__, or a work based on __DISPLAY__, together
+> with the TAK Software (ATAK-CIV, ATAK-GOV, ATAK-MIL and the TAK Software
+> Development Kit, as licensed by the United States Government under the TAK
+> Software License Agreement) and to convey the resulting work.
+>
+> You must still comply with the __LICENSE_SHORT__ in all respects for the portions of the
+> resulting work that are __DISPLAY__, or a work based on __DISPLAY__.
+>
+> If you modify this file, you may extend this exception to your version of the
+> file, but you are not obliged to do so. If you do not wish to do so, delete this
+> exception statement from your version.
+
+**In plain English.** You can build this plugin against the TAK SDK, sideload it
+into ATAK, and hand the result to whoever you like, without anyone claiming the
+license reaches into ATAK. What stays covered is this plugin's own source.
+
+**If you only install and use __DISPLAY__, none of this touches you.**
+
+**This exception does not come from the Government, and does not change the TAK
+Software License Agreement.** It is __HOLDER__ removing a restriction its own
+license would otherwise impose.
+
+---
+
+## 2. Provenance: files __HOLDER__ did not write
+
+This plugin is scaffolded from the TAK-SDK's `plugintemplate` sample, so parts of
+this repository originate with the TAK Product Center. Those parts remain subject
+to the TAK Software License Agreement, and the license above covers only
+__HOLDER__'s own work. Where the two meet in one file, it applies to the
+modifications.
+
+**From the TAK-SDK `plugintemplate` sample**, essentially unchanged:
+
+- `app/src/main/java/com/atakmap/android/__PKG__/plugin/PluginNativeLoader.java`
+- `build.gradle`, `settings.gradle`, `gradle.properties`, `gradle/versions.gradle`
+- `app/build.gradle` and `app/proguard-gradle.txt`, with this plugin's version,
+  target and keep rules edited in
+- `template.local.properties`
+- the `com.atakmap.app.component` declaration in `app/src/main/AndroidManifest.xml`
+
+**Derived from the template and substantially rewritten** (the license applies
+to the changes). List what is actually on disk:
+`ls app/src/main/java/com/atakmap/android/__PKG__/plugin/*.java`
+
+__DERIVED_CLASSES__
+
+**Third party:**
+
+- `gradlew`, `gradlew.bat` and `gradle/wrapper/`: Gradle Inc., Apache License 2.0
+
+No TAK SDK binary is in this repository. `main.jar`, `atak.apk`,
+`atak-gradle-takdev.jar` and the development keystore come from the SDK you
+download yourself from tak.gov.
+
+---
+
+Copyright (C) __YEAR__ __HOLDER__.

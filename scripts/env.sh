@@ -78,7 +78,7 @@ plugin_dir() {
         # (the APK name, the proguard descriptor), so it decides here too.
         case "$cand" in
             "$root"|"$root/$name")
-                grep -q "rootProject.name *= *['\"]$name['\"]" "$cand/settings.gradle" 2>/dev/null || continue ;;
+                grep -q "rootProject.name *= *['\"]${name}['\"]" "$cand/settings.gradle" 2>/dev/null || continue ;;
         esac
         printf '%s\n' "$cand"
         return 0
