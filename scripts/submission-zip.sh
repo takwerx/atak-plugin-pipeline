@@ -48,6 +48,42 @@ echo "==> version code (the MDM must see this as an update)"
 "$HERE/check-version-code.sh" "$NAME" --target "$ATAK_VERSION" || {
     echo "error: not zipping a version an MDM could not push as an update — bump PLUGIN_VERSION" >&2; exit 1; }
 
+# Manual pictures, before anything is built. A release that changes a screen
+# the manual shows has to carry new pictures of it. A picture of the plugin's
+# own UI (pane, dialog, menu, settings) can be shot on a dev-ATAK phone and
+# cropped: the DEVELOPER BUILD watermark is on the map, never inside the crop.
+# So it rides this submission; only map shots need the signed build. Leaving a
+# UI picture for "the signed build" costs a whole resubmission.
+echo "==> manual pictures (did this release change a screen?)"
+if [ -d "$PROJECT/docs/user_manual" ] && git -C "$PROJECT" rev-parse --git-dir >/dev/null 2>&1; then
+    PIC_BASE="$(git -C "$PROJECT" merge-base HEAD "${PICTURES_BASE:-main}" 2>/dev/null || true)"
+    if [ -n "$PIC_BASE" ]; then
+        UI_CHANGED="$(git -C "$PROJECT" diff --name-only --relative "$PIC_BASE" -- app/src/main \
+            | grep -E '/res/layout/|/res/values/strings\.xml$|/ui/' || true)"
+        PICS_CHANGED="$(git -C "$PROJECT" diff --name-only --relative "$PIC_BASE" -- docs/user_manual \
+            | grep -Ei '\.(png|jpe?g)$' || true)"
+        if [ -z "$UI_CHANGED" ]; then
+            echo "  PASS  no layout, string or UI code changed since ${PICTURES_BASE:-main}"
+        elif [ -n "$PICS_CHANGED" ]; then
+            echo "  PASS  screens changed and manual pictures changed with them"
+        elif [ "${PICTURES_CHECKED:-}" = 1 ]; then
+            echo "  PASS  screens changed, no manual picture; PICTURES_CHECKED=1 says none is needed now"
+        else
+            echo "  STOP  this release changes screens and no manual picture:"
+            echo "$UI_CHANGED" | sed 's/^/          /'
+            echo "        Pane, dialog, menu or settings shown in the manual: retake them on a"
+            echo "        dev-ATAK phone, crop to the pane or dialog, and zip again. Only map"
+            echo "        shots wait for the signed build. If no manual picture shows a changed"
+            echo "        screen, or only map shots do, rerun with PICTURES_CHECKED=1."
+            exit 1
+        fi
+    else
+        echo "  WARN  no merge base with ${PICTURES_BASE:-main} (set PICTURES_BASE to your last release); check the pictures by hand"
+    fi
+else
+    echo "  PASS  no manual, or not a git checkout"
+fi
+
 mkdir -p "$DIST"
 rm -f "$OUT"
 
