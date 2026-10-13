@@ -193,7 +193,7 @@ SIZE_HUMAN=$(du -h "$OUT" | cut -f1 | tr -d ' ')
 # fonts, title art and screenshots, so the ceiling moves — but it is still a
 # ceiling, well under the ~30 MB that main.jar alone would add.
 if [ -d "$PROJECT/docs/user_manual" ]; then
-    SIZE_LIMIT=12000000
+    SIZE_LIMIT=16000000   # 16 MB since 2026-10-12: a 120-picture manual zipped to 13 MB; the gate is for the 30 MB SDK jar
     SIZE_NOTE="with the user manual"
 else
     SIZE_LIMIT=2000000
