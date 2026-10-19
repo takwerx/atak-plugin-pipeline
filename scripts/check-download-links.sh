@@ -10,18 +10,37 @@
 #
 #   check-download-links.sh <Plugin>          # text check, no network
 #   check-download-links.sh <Plugin> --live   # also HEAD each link: 200
+#   check-download-links.sh <Plugin> --fix    # re-stamp the block to PLUGIN_VERSION first
 #
 # The text check is for pre-flight, before the release exists. --live is for
 # after `gh release create`, to prove the links resolve. Exit 1 on any finding.
 set -u
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env.sh"
 
-PLUGIN="${1:-}"; LIVE=0; [ "${2:-}" = "--live" ] && LIVE=1
-[ -n "$PLUGIN" ] || { echo "usage: $0 <Plugin> [--live]" >&2; exit 2; }
+PLUGIN="${1:-}"; LIVE=0; FIX=0
+for a in "${@:2}"; do case "$a" in --live) LIVE=1 ;; --fix) FIX=1 ;; *) echo "unknown option: $a" >&2; exit 2 ;; esac; done
+[ -n "$PLUGIN" ] || { echo "usage: $0 <Plugin> [--live] [--fix]" >&2; exit 2; }
 DIR="$(plugin_dir "$PLUGIN")" || exit 2
 
 VER="$(gradle_prop "$DIR/app/build.gradle" PLUGIN_VERSION)"
 [ -n "$VER" ] || { echo "check-download-links: PLUGIN_VERSION not found in $DIR/app/build.gradle" >&2; exit 2; }
+
+# --fix re-stamps the block to PLUGIN_VERSION before checking it: the bold
+# download line, the guide's version header, and every release-asset link's tag
+# and APK name. Nothing else in either file is touched (STATUS keeps its history).
+# submission-zip.sh runs it, so the block moves with the version bump: Cursorwerx
+# 0.3 and 0.4 both reached the ship prompt still linking the release before.
+if [ "$FIX" = 1 ]; then
+  for f in README.md docs/USER_GUIDE.md; do
+    [ -f "$DIR/$f" ] || continue
+    VER="$VER" PLUGIN="$PLUGIN" perl -0pi -e '
+      my ($v, $p) = ($ENV{VER}, $ENV{PLUGIN});
+      s/^(\*\*Download .*?) [0-9][0-9.]*\*\*/$1 $v**/mg;
+      s/^\*\*Version [0-9][0-9.]* /**Version $v /mg;
+      s#(https://github\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+/releases/download/)v[0-9][0-9.]*/ATAK-Plugin-\Q$p\E-[0-9][0-9.]*--#${1}v$v/ATAK-Plugin-$p-$v--#g;
+    ' "$DIR/$f"
+  done
+fi
 
 fail=0
 finding() { echo "  FAIL: $*"; fail=1; }

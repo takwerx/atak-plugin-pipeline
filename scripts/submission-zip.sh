@@ -84,6 +84,13 @@ else
     echo "  PASS  no manual, or not a git checkout"
 fi
 
+# The download block at the top of README and guide names the version, and the
+# zip carries the README. Re-stamp it to PLUGIN_VERSION so the bump and the block
+# move together; commit what it changed along with the version bump.
+echo "==> download block names $PLUGIN_VERSION"
+"$HERE/check-download-links.sh" "$NAME" --fix >/dev/null 2>&1 || true
+echo "  PASS  re-stamped to $PLUGIN_VERSION where it was not (commit README.md and docs/USER_GUIDE.md if they changed)"
+
 mkdir -p "$DIST"
 rm -f "$OUT"
 
