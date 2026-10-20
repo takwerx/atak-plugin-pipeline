@@ -82,7 +82,16 @@ tak.gov, plus `res/xml/preferences.xml`, a `PluginPreferenceFragment` and
 Preferences. The build the screenshots come from never ships — the next one
 carries the manual. → [references/manual.md](references/manual.md)
 
-**5. Bump the version and build a zip per ATAK target.**
+**5. Preflight the source.** [joshuafuller/atak-plugin-preflight](https://github.com/joshuafuller/atak-plugin-preflight)
+scans a plugin's source for what tak.gov's review will flag, before you spend a
+submission finding out. Clone it once; the zip script pulls the latest and runs
+it, and stops when it is not clean.
+
+```bash
+git clone https://github.com/joshuafuller/atak-plugin-preflight.git ~/atak-plugin-preflight
+```
+
+**6. Bump the version and build a zip per ATAK target.**
 
 ```bash
 scripts/submission-zip.sh <PluginName>     # one per ext.ATAK_VERSION, retarget sdk.path too
@@ -93,7 +102,7 @@ already signed for that target, verifies the zip's contents, scrubs it, then
 extracts it to a clean directory and builds it with `ATAK_CI=1` — a zip that
 fails there fails at tak.gov. → [references/submission.md](references/submission.md)
 
-**6. Take in what tak.gov returns.** Each return zip carries a Fortify scan of
+**7. Take in what tak.gov returns.** Each return zip carries a Fortify scan of
 your source, a Dependency-Check and an SBOM beside the APK. Read them before
 anything is published.
 
@@ -103,7 +112,7 @@ scripts/takgov-intake.sh                   # files ~/atak-dist/inbox/*.zip, gate
 
 → [references/intake.md](references/intake.md)
 
-**7. Publish the release.** Signed APKs land in `~/atak-dist/signed/`. One public
+**8. Publish the release.** Signed APKs land in `~/atak-dist/signed/`. One public
 repo per plugin, README to the standard, download block re-stamped to this
 version, a GitHub Release per version with every target attached.
 
@@ -114,7 +123,7 @@ scripts/check-download-links.sh <Plugin> --live
 
 → [references/publishing.md](references/publishing.md)
 
-**8. Update the channel your users install from.** A GitHub Release is where a
+**9. Update the channel your users install from.** A GitHub Release is where a
 person downloads; a fleet gets what its market catalog or MDM offers, and nothing
 updates that on its own. A release is not shipped until that channel offers the
 new version on every target it was built for.

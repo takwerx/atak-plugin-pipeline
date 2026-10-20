@@ -166,11 +166,16 @@ search if your plugins live somewhere else entirely.
   consistent forever. It only has to rise on every target and differ between
   the targets of one release, and the gate checks it against every signed
   release you have kept.
-- **The distribution channel** (step 8 in `SKILL.md`) is the one piece nobody can
+- **The distribution channel** (step 9 in `SKILL.md`) is the one piece nobody can
   write for you. Whatever your users install from — a market catalog, an MDM, a
   shared folder — updating it is part of the release, with a check.
 
 ## Related
+
+[joshuafuller/atak-plugin-preflight](https://github.com/joshuafuller/atak-plugin-preflight)
+is step 5 of this pipeline: a source scanner that finds what tak.gov's review
+will flag before you submit. `submission-zip.sh` pulls its latest and runs it
+when it is cloned at `~/atak-plugin-preflight` (or `$ATAK_PREFLIGHT`).
 
 [joshuafuller/atak-plugin-skill](https://github.com/joshuafuller/atak-plugin-skill)
 is a good companion and installs alongside this one. It goes deeper on reading

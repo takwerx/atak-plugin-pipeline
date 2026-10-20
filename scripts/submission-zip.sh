@@ -48,6 +48,23 @@ echo "==> version code (the MDM must see this as an update)"
 "$HERE/check-version-code.sh" "$NAME" --target "$ATAK_VERSION" || {
     echo "error: not zipping a version an MDM could not push as an update — bump PLUGIN_VERSION" >&2; exit 1; }
 
+# Josh Fuller's preflight scans the source the way the pipeline's reviewers
+# will: semgrep rules, secrets, dependencies. It is his tool and moves fast, so
+# pull the latest every run rather than keeping a copy. PREFLIGHT_ARGS passes
+# flags through (e.g. --allow-gaps); PREFLIGHT_SKIP=1 skips it on purpose.
+echo "==> preflight (joshuafuller/atak-plugin-preflight)"
+if [ "${PREFLIGHT_SKIP:-}" = 1 ]; then
+    echo "    skipped: PREFLIGHT_SKIP=1"
+elif [ -f "$ATAK_PREFLIGHT/preflight.py" ]; then
+    git -C "$ATAK_PREFLIGHT" pull -q --ff-only 2>/dev/null \
+        || echo "    warning: could not update $ATAK_PREFLIGHT, running the copy on disk"
+    # shellcheck disable=SC2086
+    python3 "$ATAK_PREFLIGHT/preflight.py" ${PREFLIGHT_ARGS:-} "$PROJECT" || {
+        echo "error: preflight is not clean; read its report and fix the source (PREFLIGHT_ARGS=--allow-gaps for a missing scanner)" >&2; exit 1; }
+else
+    echo "    not installed: git clone https://github.com/joshuafuller/atak-plugin-preflight.git \"$ATAK_PREFLIGHT\""
+fi
+
 # Manual pictures, before anything is built. A release that changes a screen
 # the manual shows has to carry new pictures of it. A picture of the plugin's
 # own UI (pane, dialog, menu, settings) can be shot on a dev-ATAK phone and

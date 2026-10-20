@@ -50,6 +50,10 @@ if [ -z "${ATAK_SDK:-}" ]; then
 fi
 export ATAK_SDK="${ATAK_SDK:-}"
 
+# joshuafuller/atak-plugin-preflight, cloned once; submission-zip.sh pulls it
+# to the latest and runs it before zipping.
+export ATAK_PREFLIGHT="${ATAK_PREFLIGHT:-$HOME/atak-plugin-preflight}"
+
 # Build artifacts live outside every checkout, in one place: a zip written into
 # one checkout is invisible from another. Signed APKs returned by tak.gov are
 # filed under $ATAK_DIST/signed and are what "is this version an update" is
