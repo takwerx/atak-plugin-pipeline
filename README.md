@@ -7,6 +7,9 @@ the user manual and its Tool Preferences entry, the tak.gov source-submission
 zip, reading what tak.gov sends back, the public plugin repo, and the
 `versionCode` rule an MDM needs.
 
+**To hear about updates:** Watch → Custom → Releases at the top of this repo.
+To update an installed copy, run `git pull` in the folder you installed it to.
+
 It is a working set of gates, not a write-up. Each script refuses the mistake it
 was written for, and every rule in it shipped broken at least once before it
 became a rule.
